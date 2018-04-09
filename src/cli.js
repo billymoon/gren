@@ -2,12 +2,12 @@ const fs = require('fs')
 
 const minimist = require('minimist')
 const bent = require('bent')
-const { blue, yellow, magenta, red, cyan, bold } = require('colors/safe')
 
+const { blue, yellow, magenta, red, cyan } = require('chalk')
 const argv = minimist(process.argv.slice(2))
 
 const utilsType = me => Object.prototype.toString.call(me).split(/\W/)[2].toLowerCase()
-const keyworthy = key => key && (/^[a-z][a-z0-9]*$/i.test(key) ? `.${bold(blue(key))}` : magenta('[') + yellow(`"${key}"`) + magenta(']')) || bold(blue('json'))
+const keyworthy = key => key && (/^[a-z][a-z0-9]*$/i.test(key) ? `.${blue.bold(key)}` : magenta('[') + yellow(`"${key}"`) + magenta(']')) || blue.bold('json')
 
 const colorFilters = {
   string: yellow,
