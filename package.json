@@ -1,11 +1,10 @@
 {
-  "name": "grenjs",
-  "version": "1.0.0",
+  "name": "gren",
+  "version": "0.0.1",
   "description": "",
-  "main": "index.js",
-  "bin": "bin/gren",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "main": "bin/gren",
+  "bin": {
+    "gren": "bin/gren"
   },
   "keywords": [],
   "author": "",
@@ -13,31 +12,11 @@
   "dependencies": {
     "bent": "^1.1.0",
     "chalk": "^2.3.2",
-    "colors": "^1.2.1",
+    "json-colorizer": "^1.1.0",
+    "lodash": "^4.17.5",
     "minimist": "^1.2.0"
   },
-  "cool": {
-    "test": [
-      1,
-      3,
-      4,
-      {
-        "a": "awesome"
-      }
-    ],
-    "2data": {
-      "int": 12,
-      "str": "12",
-      "really": {
-        "funnyb-name": false,
-        "funnyaName": false,
-        "funnycer-name": false
-      },
-      "yepReally": {
-        "funnybname": false,
-        "funnyaName": false,
-        "funnyc ername": false
-      }
-    }
+  "devDependencies": {
+    "jest": "^22.4.3"
   }
 }
