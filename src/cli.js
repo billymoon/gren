@@ -6,6 +6,7 @@ const bent = require('bent')
 const _ = require('lodash')
 const chalk = require('chalk')
 var colorize = require('json-colorizer');
+const highlight = require('cli-highlight').highlight
 
 function gronToObject(str) {
   const lines = str.trim().split('\n')
@@ -77,34 +78,110 @@ const defaultColors = {
     NULL_LITERAL: c.cyan
 }
 
-const pretty = obj => colorize(JSON.stringify(obj || {}, null,2), { colors: defaultColors })
+const pretty = json => colorize(json, { colors: defaultColors })
+// const pretty = obj => colorize(JSON.stringify(obj || {}, null, 2), { colors: defaultColors })
 
-void (async () => {
-  let src = ''
-  if (!process.stdin.isTTY) {
-    src = JSON.parse(fs.readFileSync(0))
-  } else if (argv._[0] && /^https?:\/\//.test(argv._[0])) {
-    src = await bent('json')(argv._[0])
-  } else {
-    src = JSON.parse(fs.readFileSync(argv._[0]))
-  }
-  if (argv.g) {
-    str = src
-    const value = _.get(str, argv.g)
-    if (typeof value === 'string' || typeof value === 'number') {
-      console.log(value)
+
+
+const getInput = () => {
+  const promise = new Promise((resolve, reject) => {
+    if (!process.stdin.isTTY) {
+
+      const chunks = []
+
+      process.stdin.setEncoding('utf8')
+
+      process.stdin.on('readable', () => {
+        const chunk = process.stdin.read()
+        if (chunk !== null) {
+          chunks.push(chunk)
+        }
+      })
+
+      process.stdin.on('end', () => {
+        resolve(JSON.parse(chunks.join('')))
+      })
+    } else if (argv._[0] && /^https?:\/\//.test(argv._[0])) {
+      (bent('json')(argv._[0])).then(resolve)
     } else {
-      console.log(pretty(value))
+      resolve(JSON.parse(fs.readFileSync(argv._[0])))
     }
-  } else {
-    let str = formatter(src)
-    if (argv.f) {
-      str = str.split('\n').filter(item => RegExp(argv.f, argv.i ? 'i' : '').test(item)).join('\n')
-    }
-    if (argv.u) {
-      console.log(pretty(gronToObject(str)))
-    } else {
-      console.log(str)
-    }
-  }
-})()
+  })
+  return promise
+}
+
+getInput().then(src => {
+  // console.log(src, typeof src)
+  // console.log(pretty(JSON.stringify(src, null, 2)))
+  console.log(highlight(JSON.stringify(src, null, 2), { theme: { string: 'yellow' }}))
+  // console.log(JSON.stringify(src, null, 2))
+})
+
+
+
+// // void (async () => {
+//   let src = ''
+//   if (!process.stdin.isTTY) {
+
+//     // const chunks = []
+//     // process.stdin.setEncoding('utf8');
+
+//     // process.stdin.on('readable', () => {
+//     //   const chunk = process.stdin.read();
+//     //   if (chunk !== null) {
+//     //     // process.stdout.write(`data: ${chunk}`);
+//     //     chunks.push(chunk)
+//     //   }
+//     // });
+
+//     // process.stdin.on('end', () => {
+//     //   src = JSON.parse(chunks.join(''))
+//     //   // process.stdout.write(JSON.stringify(src))
+//     //   // process.stdout.write('end');
+//     getStdin().then(src => {
+//   if (argv.g) {
+//     str = JSON.parse(src)
+//     const value = _.get(str, argv.g)
+//     if (typeof value === 'string' || typeof value === 'number') {
+//       process.stdout.write(value)
+//     } else {
+//       process.stdout.write(pretty(value))
+//     }
+//   } else {
+//     let str = formatter(src)
+//     if (argv.f) {
+//       str = str.split('\n').filter(item => RegExp(argv.f, argv.i ? 'i' : '').test(item)).join('\n')
+//     }
+//     if (argv.u) {
+//       process.stdout.write(pretty(gronToObject(str)))
+//     } else {
+//       process.stdout.write(str)
+//     }
+//   }
+//     });
+//   // } else if (argv._[0] && /^https?:\/\//.test(argv._[0])) {
+//     // src = await bent('json')(argv._[0])
+//   } else {
+//     src = JSON.parse(fs.readFileSync(argv._[0]))
+
+//   if (argv.g) {
+//     str = src
+//     const value = _.get(str, argv.g)
+//     if (typeof value === 'string' || typeof value === 'number') {
+//       process.stdout.write(value)
+//     } else {
+//       process.stdout.write(pretty(value))
+//     }
+//   } else {
+//     let str = formatter(src)
+//     if (argv.f) {
+//       str = str.split('\n').filter(item => RegExp(argv.f, argv.i ? 'i' : '').test(item)).join('\n')
+//     }
+//     if (argv.u) {
+//       process.stdout.write(pretty(gronToObject(str)))
+//     } else {
+//       process.stdout.write(str)
+//     }
+//   }
+//   }
+// // })()
