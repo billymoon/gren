@@ -77,11 +77,11 @@ const defaultColors = {
     BOOLEAN_LITERAL: c.cyan,
     NULL_LITERAL: c.cyan
 }
+// https://github.com/chalk/ansi-regex/blob/master/index.js
+const ansiRegex = /[\u001B\u009B][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[a-zA-Z\d]*)*)?\u0007)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PRZcf-ntqry=><~]))/g
+const stripansi = input => input.replace(ansiRegex, '')
 
 const pretty = json => colorize(json, { colors: defaultColors })
-// const pretty = obj => colorize(JSON.stringify(obj || {}, null, 2), { colors: defaultColors })
-
-
 
 const getInput = () => {
   const promise = new Promise((resolve, reject) => {
@@ -99,89 +99,46 @@ const getInput = () => {
       })
 
       process.stdin.on('end', () => {
-        resolve(JSON.parse(chunks.join('')))
+        resolve(chunks.join(''))
       })
+
+      // process.stdin.on('error', () => {
+      //   reject({ err: 'no data' })
+      // })
+
+      // process.stdin.on('close', () => {
+      //   reject({ err: 'no data' })
+      // })
     } else if (argv._[0] && /^https?:\/\//.test(argv._[0])) {
-      (bent('json')(argv._[0])).then(resolve)
+      (bent('json')(argv._[0])).then(obj => resolve(JSON.stringify(obj)))
+    } else if (argv._[0]) {
+      resolve(fs.readFileSync(argv._[0], 'utf8'))
     } else {
-      resolve(JSON.parse(fs.readFileSync(argv._[0])))
+      resolve(JSON.stringify({ error: 'no input' }))
     }
   })
   return promise
 }
 
 getInput().then(src => {
-  // console.log(src, typeof src)
-  // console.log(pretty(JSON.stringify(src, null, 2)))
-  console.log(highlight(JSON.stringify(src, null, 2), { theme: { string: 'yellow' }}))
-  // console.log(JSON.stringify(src, null, 2))
+  const objectified = argv.i ? gronToObject(src) : JSON.parse(src)
+  const obj = !argv.f ? objectified : gronToObject(stripansi(formatter(objectified)).split('\n').filter(item => RegExp(argv.f, argv.s ? '' : 'i').test(item)).join('\n'))
+  // if we are getting a value, write out strings and numbers as is, highlight others
+  // else 
+  if (argv.g) {
+    const value = _.get(obj, argv.g)
+    if (typeof value === 'string' || typeof value === 'number') {
+      process.stdout.write(value)
+    } else {
+      process.stdout.write(highlight(JSON.stringify(value, null, 2)))
+    }
+  } else {
+    // if output arg set, output gren-ish
+    // else output json
+    if (argv.o) {
+      process.stdout.write(formatter(obj))
+    } else {
+      process.stdout.write(highlight(JSON.stringify(obj, null, 2)))
+    }
+  }
 })
-
-
-
-// // void (async () => {
-//   let src = ''
-//   if (!process.stdin.isTTY) {
-
-//     // const chunks = []
-//     // process.stdin.setEncoding('utf8');
-
-//     // process.stdin.on('readable', () => {
-//     //   const chunk = process.stdin.read();
-//     //   if (chunk !== null) {
-//     //     // process.stdout.write(`data: ${chunk}`);
-//     //     chunks.push(chunk)
-//     //   }
-//     // });
-
-//     // process.stdin.on('end', () => {
-//     //   src = JSON.parse(chunks.join(''))
-//     //   // process.stdout.write(JSON.stringify(src))
-//     //   // process.stdout.write('end');
-//     getStdin().then(src => {
-//   if (argv.g) {
-//     str = JSON.parse(src)
-//     const value = _.get(str, argv.g)
-//     if (typeof value === 'string' || typeof value === 'number') {
-//       process.stdout.write(value)
-//     } else {
-//       process.stdout.write(pretty(value))
-//     }
-//   } else {
-//     let str = formatter(src)
-//     if (argv.f) {
-//       str = str.split('\n').filter(item => RegExp(argv.f, argv.i ? 'i' : '').test(item)).join('\n')
-//     }
-//     if (argv.u) {
-//       process.stdout.write(pretty(gronToObject(str)))
-//     } else {
-//       process.stdout.write(str)
-//     }
-//   }
-//     });
-//   // } else if (argv._[0] && /^https?:\/\//.test(argv._[0])) {
-//     // src = await bent('json')(argv._[0])
-//   } else {
-//     src = JSON.parse(fs.readFileSync(argv._[0]))
-
-//   if (argv.g) {
-//     str = src
-//     const value = _.get(str, argv.g)
-//     if (typeof value === 'string' || typeof value === 'number') {
-//       process.stdout.write(value)
-//     } else {
-//       process.stdout.write(pretty(value))
-//     }
-//   } else {
-//     let str = formatter(src)
-//     if (argv.f) {
-//       str = str.split('\n').filter(item => RegExp(argv.f, argv.i ? 'i' : '').test(item)).join('\n')
-//     }
-//     if (argv.u) {
-//       process.stdout.write(pretty(gronToObject(str)))
-//     } else {
-//       process.stdout.write(str)
-//     }
-//   }
-//   }
-// // })()
