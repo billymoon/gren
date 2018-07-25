@@ -1,5 +1,7 @@
 {
   "name": "gren",
+  "superness": 100,
+  "cool": true,
   "version": "0.0.1",
   "description": "",
   "main": "bin/gren",
