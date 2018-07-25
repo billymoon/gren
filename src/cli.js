@@ -125,28 +125,26 @@ const theme = fromJson({
   attr: ['blue', 'bold'],
 })
 
-const pretty = obj => highlight(JSON.stringify(obj, null, 2), { theme })
+const pretty = obj => highlight(JSON.stringify(obj, null, argv.c ? null : 2), { theme })
+const output = content => process.stdout.write(argv.x ? stripansi(content) : content)
+const filter = objectified => gronToObject(stripansi(formatter(objectified)).split('\n').filter(item => RegExp(argv.f, argv.s ? '' : 'i').test(item)).join('\n'))
 
 getInput().then(src => {
   const objectified = argv.i ? gronToObject(src) : JSON.parse(src)
-  const obj = !argv.f ? objectified : gronToObject(stripansi(formatter(objectified)).split('\n').filter(item => RegExp(argv.f, argv.s ? '' : 'i').test(item)).join('\n'))
+  const obj = !argv.f ? objectified : filter(objectified)
   // if we are getting a value, write out strings and numbers as is, highlight others
-  // else 
+  // if output arg set, output gren-ish
+  // else output json
   if (argv.g) {
     const value = _.get(obj, argv.g)
     if (typeof value === 'string' || typeof value === 'number') {
-      process.stdout.write(value)
+      output(value)
     } else {
-      // process.stdout.write(highlight(JSON.stringify(value, null, 2)))
-      process.stdout.write(pretty(value))
+      output(pretty(value))
     }
+  } else if (argv.o) {
+    output(formatter(obj))
   } else {
-    // if output arg set, output gren-ish
-    // else output json
-    if (argv.o) {
-      process.stdout.write(formatter(obj))
-    } else {
-      process.stdout.write(pretty(obj))
-    }
+    output(pretty(obj))
   }
 })
