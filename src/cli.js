@@ -23,7 +23,7 @@ function gronToObject(str) {
 }
 
 const argv = minimist(process.argv.slice(2))
-const { blue, yellow, magenta, red, cyan, white } = new chalk.constructor({ enabled: !argv.u })
+const { blue, yellow, magenta, red, cyan, white } = new chalk.constructor({ enabled: !argv.o })
 
 const utilsType = me => Object.prototype.toString.call(me).split(/\W/)[2].toLowerCase()
 const keyworthy = key => key && (/^[a-z][a-z0-9]*$/i.test(key) ? `.${blue.bold(key)}` : white('[') + yellow(`"${key}"`) + white(']')) || blue.bold('json')
